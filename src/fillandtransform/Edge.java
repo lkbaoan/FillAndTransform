@@ -60,7 +60,7 @@ public class Edge implements Comparable<Edge> {
     }
 
     public int getMaxY() {
-        return y2 >= y1 ? y2 : y1;
+        return y2 > y1 ? y2 : y1;
     }
 
     public double getAssociateX() {

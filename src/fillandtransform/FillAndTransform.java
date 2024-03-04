@@ -116,6 +116,8 @@ public class FillAndTransform {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
+        System.out.println("------------------------------------------------");
         // start program with 2D array of command
         program.start(drawList);
 
@@ -131,21 +133,35 @@ public class FillAndTransform {
     }
 
     private void scanLine(Polygon poly) {
-        System.out.printf("Size: %d\n", poly.getEdges().size());
+//        System.out.printf("Size: %d\n", poly.getEdges().size());
         List<Edge> globalEdge = initializeGlobalEdge(poly);
         List<Edge> activeEdge = new ArrayList<>();
         List<Integer> intersection = new ArrayList<>();
-        boolean evenParity = true;
         int yMin = poly.getYMin();
         int yMax = poly.getYMax();
+        System.out.printf("y Min: %d\tyMax: %d\n", yMin, yMax);
 
         glColor3f(poly.getRed(), poly.getGreen(), poly.getBlue());
 
-        for (int y = yMin; y < yMax; y++) {
-            activeEdge(activeEdge, globalEdge, y);
-            getIntersection(intersection, activeEdge, y);
-
-            Collections.sort(intersection);
+        for (int scanLine = yMin; scanLine < yMax; scanLine++) {
+//            boolean evenParity = false;
+            activeEdge(activeEdge, globalEdge, scanLine);
+            for (int i = 0; i < activeEdge.size(); i++) {
+                int x1 = activeEdge.get(i).getX1();
+                int y1 = activeEdge.get(i).getY1();
+                int x2 = activeEdge.get(i).getX2();
+                int y2 = activeEdge.get(i).getY2();
+                System.out.printf("Active: (%d, %d) (%d, %d)\n", x1, y1, x2, y2);
+            }
+            System.out.println("");
+//            int first = (int) activeEdge.get(0).getAssociateX();
+//            int last = (int) activeEdge.get(activeEdge.size() - 1).getAssociateX();
+//            for (int i = first; i < last; i++) {
+//                
+//            }
+//
+//            updateActiveEdge(activeEdge);
+            getIntersection(intersection, activeEdge, scanLine);
 
             for (int i = 0; i < intersection.size(); i += 2) {
                 int x1 = intersection.get(i);
@@ -155,11 +171,10 @@ public class FillAndTransform {
                 int x2 = intersection.get(i + 1);
                 for (int j = x1; j <= x2; j++) {
                     glBegin(GL_POINTS);
-                    glVertex2f(j, y);
+                    glVertex2f(j, scanLine);
                     glEnd();
                 }
             }
-
         }
     }
 
@@ -167,10 +182,14 @@ public class FillAndTransform {
         intersection.clear();
 
         for (Edge e : activeEdge) {
-            int x = (int) e.getAssociateX();
+//            int x = (int) e.getAssociateX();
+            int x = (int) (e.getAssociateX() + ((currentY - e.getMinY()) * e.get1OverM()));
             intersection.add(x);
-            e.updateAssociateX();
+
+//            e.updateAssociateX();
         }
+        Collections.sort(intersection);
+//        System.out.println(intersection);
     }
 
     private void activeEdge(List<Edge> activeEdges, List<Edge> globalEdge, int y) {
@@ -179,14 +198,33 @@ public class FillAndTransform {
                 if (!activeEdges.contains(e)) {
                     activeEdges.add(e);
                 }
-            } else if (activeEdges.contains(e)) {
+            } else {
                 activeEdges.remove(e);
             }
+//            } else if (activeEdges.contains(e)) {
+//                activeEdges.remove(e);
+//            }
+//            if (e.getMinY() == y) {
+//                activeEdges.add(e);
+//            }
+//            if (e.getMaxY() == y) {
+//                activeEdges.remove(e);
+//            }
         }
+        Collections.sort(activeEdges);
+    }
+
+    private void updateActiveEdge(List<Edge> activeEdge) {
+        for (Edge e : activeEdge) {
+            e.updateAssociateX();
+            System.out.printf("%.1f\t", e.getAssociateX());
+        }
+        System.out.println("");
+        Collections.sort(activeEdge);
     }
 
     private boolean isActive(Edge edge, int currentY) {
-        return edge.getMinY() < currentY && currentY < edge.getMaxY();
+        return edge.getMinY() <= currentY && currentY <= edge.getMaxY();
     }
 
     private List<Edge> initializeGlobalEdge(Polygon poly) {
@@ -197,11 +235,11 @@ public class FillAndTransform {
                 if (Double.isInfinite(allEdge.get(i).get1OverM())) {
                     allEdge.remove(i);
                 }
-                System.out.printf("%d %d %d %.1f\n", allEdge.get(i).getMinY(), allEdge.get(i).getMaxY(), allEdge.get(i).getAssociateX(), allEdge.get(i).get1OverM());
+//                System.out.printf("%d %d %d %.1f\n", allEdge.get(i).getMinY(), allEdge.get(i).getMaxY(), allEdge.get(i).getAssociateX(), allEdge.get(i).get1OverM());
             } catch (ArithmeticException e) {
             }
         }
-        System.out.println("---");
+//        System.out.println("---");
 
         return allEdge;
     }
@@ -253,12 +291,12 @@ public class FillAndTransform {
                 glPointSize(1);
 
                 // render each command from the array
-                for (int i = 0; i < drawList.size(); i++) {
-                    scanLine(drawList.get(i));
-                }
+//                for (int i = 0; i < drawList.size(); i++) {
+                scanLine(drawList.get(0));
+//                }
 
                 Display.update();
-                Display.sync(60);
+                Display.sync(144);
             } catch (Exception e) {
             }
         }

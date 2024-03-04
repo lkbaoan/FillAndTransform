@@ -77,7 +77,7 @@ public class Polygon {
     public int getYMin() {
         int yMin = edges.get(0).getMinY();
         for (Edge edge : edges) {
-            if (edge.getMinY() < yMin) {
+            if (yMin > edge.getMinY()) {
                 yMin = edge.getMinY();
             }
         }
@@ -87,8 +87,8 @@ public class Polygon {
     public int getYMax() {
         int yMax = edges.get(0).getMaxY();
         for (Edge edge : edges) {
-            if (edge.getMaxY() > yMax) {
-                yMax = edge.getMinY();
+            if (yMax < edge.getMaxY()) {
+                yMax = edge.getMaxY();
             }
         }
         return yMax;
