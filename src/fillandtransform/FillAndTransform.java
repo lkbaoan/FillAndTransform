@@ -10,12 +10,14 @@
  * color based on the value from the file.
  *
  *************************************************************** */
+// TODO: Fill comment
 package fillandtransform;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
@@ -25,7 +27,7 @@ public class FillAndTransform {
     // method: main
     // purpose: to read file and start the program
     public static void main(String[] args) {
-//        FillAndTransform program = new FillAndTransform();
+        FillAndTransform program = new FillAndTransform();
         List<Polygon> drawList = new ArrayList<>();
 
         // read line from file to arraylist and counting type of command.
@@ -37,12 +39,32 @@ public class FillAndTransform {
             Polygon poly = new Polygon();
             boolean first = true;
             Transform trans;
+            boolean firstEdge = true;
+            int firstX = 0, firstY = 0;
+            int prevx = 0, prevy = 0;
             while (read.hasNextLine()) {
                 str = read.nextLine();
                 String[] splitted = str.trim().split("\\s+");
+                int x, y;
                 System.out.println(Arrays.toString(splitted));
                 if (isNumeric(splitted[0])) {
-                    poly.addVertice(Integer.parseInt(splitted[0]), Integer.parseInt(splitted[1]));
+                    if (firstEdge) {
+                        firstEdge = false;
+                        firstX = Integer.parseInt(splitted[0]);
+                        firstY = Integer.parseInt(splitted[1]);
+                        prevx = firstX;
+                        prevy = firstY;
+                    } else {
+                        x = Integer.parseInt(splitted[0]);
+                        y = Integer.parseInt(splitted[1]);
+                        poly.addEdge(prevx, prevy, x, y);
+                        prevx = x;
+                        prevy = y;
+                    }
+
+                } else if (splitted[0].equals("T")) {
+                    poly.addEdge(prevx, prevy, firstX, firstY);
+                    firstEdge = true;
                 } else if (splitted[0].equals("P")) {
                     if (first) {
                         first = false;
@@ -72,9 +94,11 @@ public class FillAndTransform {
             while (ite.hasNext()) {
                 Polygon p = ite.next();
                 System.out.printf("Color %f %f %f\n", p.getRed(), p.getGreen(), p.getBlue());
-                Iterator<Integer[]> iv = p.getVertices();
+                Iterator<Edge> iv = p.getEdges().iterator();
                 while (iv.hasNext()) {
-                    System.out.println(Arrays.toString(iv.next()));
+//                    System.out.println(Arrays.toString(iv.next()));
+                    Edge e = iv.next();
+                    System.out.printf("(%d,%d) (%d,%d)\n", e.getX1(), e.getY1(), e.getX2(), e.getY2());
                 }
                 Iterator<Transform> it = p.getTransformation();
                 while (it.hasNext()) {
@@ -89,7 +113,8 @@ public class FillAndTransform {
             e.printStackTrace();
         }
         // start program with 2D array of command
-//        program.start();
+        program.start(drawList);
+
     }
 
     private static boolean isNumeric(String str) {
@@ -100,17 +125,50 @@ public class FillAndTransform {
             return false;
         }
     }
-//    // method: start
-//    // purpose: start a new window and render graphics
-//    public void start(int[][] line, int[][] circle, int[][] ellipse) {
-//        try {
+
+    private void scanLine(Polygon poly) {
+        System.out.printf("Size: %d\n", poly.getEdges().size());
+        List<Edge> globalEdge = initializeGlobalEdge(poly);
+//        for (int i = 0; i < globalEdge.size(); i++) {
+//            System.out.printf("%d %d %d %f\n", globalEdge.get(i).getMinY(), globalEdge.get(i).getMaxY(), globalEdge.get(i).getAssociateX(), globalEdge.get(i).get1OverM());
+//        }
+        int yMin = poly.getYMin();
+        int yMax = poly.getYMax();
+
+    }
+
+    private List<Edge> initializeGlobalEdge(Polygon poly) {
+        List<Edge> allEdge = poly.getEdges();
+        Collections.sort(allEdge);
+        for (int i = 0; i < allEdge.size(); i++) {
+            try {
+                if (Double.isInfinite(allEdge.get(i).get1OverM())) {
+                    allEdge.remove(i);
+                }
+                System.out.printf("%d %d %d %.1f\n", allEdge.get(i).getMinY(), allEdge.get(i).getMaxY(), allEdge.get(i).getAssociateX(), allEdge.get(i).get1OverM());
+            } catch (ArithmeticException e) {
+            }
+        }
+        System.out.println("---");
+
+        return allEdge;
+    }
+
+    // method: start
+    // purpose: start a new window and render graphics
+    public void start(List<Polygon> drawList) {
+        try {
+            for (int i = 0; i < drawList.size(); i++) {
+                scanLine(drawList.get(i));
+            }
+
 //            createWindow();
 //            initGL();
 //            render(line, circle, ellipse);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 //
 //    // method: createWindow
 //    // purpose: create a new window display with set size and title

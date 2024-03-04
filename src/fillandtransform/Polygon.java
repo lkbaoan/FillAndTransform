@@ -10,16 +10,19 @@
  * well as its transformation.
  *
  *************************************************************** */
+// TODO: Fill comment
 package fillandtransform;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class Polygon {
 
     float red, green, blue;
-    ArrayList<Integer[]> vertices;
-    ArrayList<Transform> transformation;
+    List<Integer[]> vertices;
+    List<Transform> transformation;
+    List<Edge> edges;
 
     public Polygon() {
         red = 0.0f;
@@ -27,6 +30,7 @@ public class Polygon {
         blue = 0.0f;
         vertices = new ArrayList<>();
         transformation = new ArrayList<>();
+        edges = new ArrayList<>();
     }
 
     // setter and getter for color
@@ -55,6 +59,39 @@ public class Polygon {
 
     public Iterator<Integer[]> getVertices() {
         return vertices.iterator();
+    }
+
+    public int getVerticesSize() {
+        return vertices.size();
+    }
+
+    public void addEdge(int x1, int y1, int x2, int y2) {
+        Edge edge = new Edge(x1, y1, x2, y2);
+        edges.add(edge);
+    }
+
+    public List<Edge> getEdges() {
+        return edges;
+    }
+
+    public int getYMin() {
+        int yMin = edges.get(0).getMinY();
+        for (Edge edge : edges) {
+            if (edge.getMinY() < yMin) {
+                yMin = edge.getMinY();
+            }
+        }
+        return yMin;
+    }
+
+    public int getYMax() {
+        int yMax = edges.get(0).getMaxY();
+        for (Edge edge : edges) {
+            if (edge.getMaxY() > yMax) {
+                yMax = edge.getMinY();
+            }
+        }
+        return yMax;
     }
 
     public void addTransformation(Transform trans) {
