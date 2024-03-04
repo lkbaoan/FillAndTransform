@@ -125,7 +125,7 @@ public class FillAndTransform {
 
     private static boolean isNumeric(String str) {
         try {
-            Double.parseDouble(str);
+            Double.valueOf(str);
             return true;
         } catch (NumberFormatException e) {
             return false;
@@ -143,25 +143,30 @@ public class FillAndTransform {
 
         glColor3f(poly.getRed(), poly.getGreen(), poly.getBlue());
 
-        for (int scanLine = yMin; scanLine < yMax; scanLine++) {
+        for (int scanLine = yMin; scanLine <= yMax; scanLine++) {
 //            boolean evenParity = false;
             activeEdge(activeEdge, globalEdge, scanLine);
-            for (int i = 0; i < activeEdge.size(); i++) {
-                int x1 = activeEdge.get(i).getX1();
-                int y1 = activeEdge.get(i).getY1();
-                int x2 = activeEdge.get(i).getX2();
-                int y2 = activeEdge.get(i).getY2();
-                System.out.printf("Active: (%d, %d) (%d, %d)\n", x1, y1, x2, y2);
+            getIntersection(intersection, activeEdge, scanLine);
+            if (scanLine == 160) {
+                System.out.println("AT Y = 160");
+                for (int i = 0; i < activeEdge.size(); i++) {
+                    int x1 = activeEdge.get(i).getX1();
+                    int y1 = activeEdge.get(i).getY1();
+                    int x2 = activeEdge.get(i).getX2();
+                    int y2 = activeEdge.get(i).getY2();
+//                    double xA = activeEdge.get(i).getAssociateX();
+                    System.out.printf("Active: (%d, %d) (%d, %d) \n", x1, y1, x2, y2);
+                }
+                System.out.println("");
+//                System.out.println(intersection);
+//                intersection.remove(0);
             }
-            System.out.println("");
 //            int first = (int) activeEdge.get(0).getAssociateX();
 //            int last = (int) activeEdge.get(activeEdge.size() - 1).getAssociateX();
 //            for (int i = first; i < last; i++) {
 //                
 //            }
-//
 //            updateActiveEdge(activeEdge);
-            getIntersection(intersection, activeEdge, scanLine);
 
             for (int i = 0; i < intersection.size(); i += 2) {
                 int x1 = intersection.get(i);
@@ -180,13 +185,16 @@ public class FillAndTransform {
 
     private void getIntersection(List<Integer> intersection, List<Edge> activeEdge, int currentY) {
         intersection.clear();
-
+        List<Edge> temp = new ArrayList<>();
         for (Edge e : activeEdge) {
 //            int x = (int) e.getAssociateX();
             int x = (int) (e.getAssociateX() + ((currentY - e.getMinY()) * e.get1OverM()));
             intersection.add(x);
-
+//            if (currentY == e.getMaxY())
 //            e.updateAssociateX();
+        }
+        if (currentY == 160) {
+            System.out.println(intersection);
         }
         Collections.sort(intersection);
 //        System.out.println(intersection);
@@ -211,7 +219,7 @@ public class FillAndTransform {
 //                activeEdges.remove(e);
 //            }
         }
-        Collections.sort(activeEdges);
+
     }
 
     private void updateActiveEdge(List<Edge> activeEdge) {
@@ -224,7 +232,7 @@ public class FillAndTransform {
     }
 
     private boolean isActive(Edge edge, int currentY) {
-        return edge.getMinY() <= currentY && currentY <= edge.getMaxY();
+        return edge.getMinY() < currentY && currentY <= edge.getMaxY();
     }
 
     private List<Edge> initializeGlobalEdge(Polygon poly) {
@@ -296,7 +304,7 @@ public class FillAndTransform {
 //                }
 
                 Display.update();
-                Display.sync(144);
+                Display.sync(60);
             } catch (Exception e) {
             }
         }
