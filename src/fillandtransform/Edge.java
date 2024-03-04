@@ -17,6 +17,7 @@ public class Edge implements Comparable<Edge> {
     private int x1, y1;
     private int x2, y2;
     private int dx, dy;
+    private double associateX;
 
     public Edge(int x1, int y1, int x2, int y2) {
         this.x1 = x1;
@@ -26,6 +27,8 @@ public class Edge implements Comparable<Edge> {
 
         dx = x2 - x1;
         dy = y2 - y1;
+
+        associateX = y2 > y1 ? x1 : x2;
     }
 
     public int getX1() {
@@ -60,8 +63,12 @@ public class Edge implements Comparable<Edge> {
         return y2 >= y1 ? y2 : y1;
     }
 
-    public int getAssociateX() {
-        return y2 > y1 ? x1 : x2;
+    public double getAssociateX() {
+        return associateX;
+    }
+
+    public void updateAssociateX() {
+        associateX = associateX + get1OverM();
     }
 
     public double getSlope() {

@@ -21,6 +21,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.DisplayMode;
+import static org.lwjgl.opengl.GL11.*;
 
 public class FillAndTransform {
 
@@ -129,12 +133,60 @@ public class FillAndTransform {
     private void scanLine(Polygon poly) {
         System.out.printf("Size: %d\n", poly.getEdges().size());
         List<Edge> globalEdge = initializeGlobalEdge(poly);
-//        for (int i = 0; i < globalEdge.size(); i++) {
-//            System.out.printf("%d %d %d %f\n", globalEdge.get(i).getMinY(), globalEdge.get(i).getMaxY(), globalEdge.get(i).getAssociateX(), globalEdge.get(i).get1OverM());
-//        }
+        List<Edge> activeEdge = new ArrayList<>();
+        List<Integer> intersection = new ArrayList<>();
+        boolean evenParity = true;
         int yMin = poly.getYMin();
         int yMax = poly.getYMax();
 
+        glColor3f(poly.getRed(), poly.getGreen(), poly.getBlue());
+
+        for (int y = yMin; y < yMax; y++) {
+            activeEdge(activeEdge, globalEdge, y);
+            getIntersection(intersection, activeEdge, y);
+
+            Collections.sort(intersection);
+
+            for (int i = 0; i < intersection.size(); i += 2) {
+                int x1 = intersection.get(i);
+                if (i + 1 >= intersection.size()) {
+                    break;
+                }
+                int x2 = intersection.get(i + 1);
+                for (int j = x1; j <= x2; j++) {
+                    glBegin(GL_POINTS);
+                    glVertex2f(j, y);
+                    glEnd();
+                }
+            }
+
+        }
+    }
+
+    private void getIntersection(List<Integer> intersection, List<Edge> activeEdge, int currentY) {
+        intersection.clear();
+
+        for (Edge e : activeEdge) {
+            int x = (int) e.getAssociateX();
+            intersection.add(x);
+            e.updateAssociateX();
+        }
+    }
+
+    private void activeEdge(List<Edge> activeEdges, List<Edge> globalEdge, int y) {
+        for (Edge e : globalEdge) {
+            if (isActive(e, y)) {
+                if (!activeEdges.contains(e)) {
+                    activeEdges.add(e);
+                }
+            } else if (activeEdges.contains(e)) {
+                activeEdges.remove(e);
+            }
+        }
+    }
+
+    private boolean isActive(Edge edge, int currentY) {
+        return edge.getMinY() < currentY && currentY < edge.getMaxY();
     }
 
     private List<Edge> initializeGlobalEdge(Polygon poly) {
@@ -158,70 +210,60 @@ public class FillAndTransform {
     // purpose: start a new window and render graphics
     public void start(List<Polygon> drawList) {
         try {
-            for (int i = 0; i < drawList.size(); i++) {
-                scanLine(drawList.get(i));
-            }
-
-//            createWindow();
-//            initGL();
-//            render(line, circle, ellipse);
+            createWindow();
+            initGL();
+            render(drawList);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-//
-//    // method: createWindow
-//    // purpose: create a new window display with set size and title
-//    private void createWindow() throws Exception {
-//        Display.setFullscreen(false);
-//        Display.setDisplayMode(new DisplayMode(640, 480));
-//        Display.setTitle("Program 1");
-//        Display.create();
-//    }
-//
-//    // method: initGL
-//    // purpose: initilize openGL task
-//    private void initGL() {
-//        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-//        glMatrixMode(GL_PROJECTION);
-//        glLoadIdentity();
-//
-//        glOrtho(0, 640, 0, 480, 1, -1);
-//
-//        glMatrixMode(GL_MODELVIEW);
-//        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-//    }
-//
-//    // method: render
-//    // purpose: render graphics based on command
-//    private void render(int[][] line, int[][] circle, int[][] ellipse) {
-//        // close when press "Q" or click close window
-//        while (!Keyboard.isKeyDown(Keyboard.KEY_Q) && !Display.isCloseRequested()) {
-//            try {
-//                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//                glLoadIdentity();
-//
-//                glColor3f(1.0f, 1.0f, 0.0f);
-//                glPointSize(1);
-//
-//                // render each command from the array
-//                for (int[] l : line) {
-//                    renderLine(l[0], l[1], l[2], l[3]);
-//                }
-//                for (int[] l : circle) {
-//                    renderCircle(l[0], l[1], l[2]);
-//                }
-//                for (int[] l : ellipse) {
-//                    renderEllipse(l[0], l[1], l[2], l[3]);
-//                }
-//
-//                Display.update();
-//                Display.sync(60);
-//            } catch (Exception e) {
-//            }
-//        }
-//        Display.destroy();
-//    }
+
+    // method: createWindow
+    // purpose: create a new window display with set size and title
+    private void createWindow() throws Exception {
+        Display.setFullscreen(false);
+        Display.setDisplayMode(new DisplayMode(640, 480));
+        Display.setTitle("Program 1");
+        Display.create();
+    }
+
+    // method: initGL
+    // purpose: initilize openGL task
+    private void initGL() {
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+
+        glOrtho(0, 640, 0, 480, 1, -1);
+
+        glMatrixMode(GL_MODELVIEW);
+        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    }
+
+    // method: render
+    // purpose: render graphics based on command
+    private void render(List<Polygon> drawList) {
+        // close when press "Q" or click close window
+        while (!Keyboard.isKeyDown(Keyboard.KEY_Q) && !Display.isCloseRequested()) {
+            try {
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glLoadIdentity();
+
+                glColor3f(1.0f, 1.0f, 0.0f);
+                glPointSize(1);
+
+                // render each command from the array
+                for (int i = 0; i < drawList.size(); i++) {
+                    scanLine(drawList.get(i));
+                }
+
+                Display.update();
+                Display.sync(60);
+            } catch (Exception e) {
+            }
+        }
+        Display.destroy();
+    }
 //
 //    // method: renderLine
 //    // purpose: render line from start coordinate and end coordiante
