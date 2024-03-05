@@ -12,6 +12,7 @@
 // TODO: Fill comment
 package fillandtransform;
 
+//public class Transform implements Comparable<Transform> {
 public class Transform {
 
     char type;
@@ -48,4 +49,28 @@ public class Transform {
     public double[] getCoordinate() {
         return coordinate;
     }
+
+//    @Override
+//    public int compareTo(Transform t) {
+//        int val = 0;
+//        switch (type) {
+//            case 't':
+//                if (t.type != 't') {
+//                    val = 1;
+//                }
+//                break;
+//            case 'r':
+//                if (t.type == 't') {
+//                    val = -1;
+//                } else if (t.type == 's') {
+//                    val = 1;
+//                }
+//                break;
+//            case 's':
+//                if (t.type != 's') {
+//                    val = -1;
+//                }
+//        }
+//        return val;
+//    }
 }

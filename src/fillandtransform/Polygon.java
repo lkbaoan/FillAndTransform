@@ -14,16 +14,15 @@
 package fillandtransform;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class Polygon {
-
-    float red, green, blue;
-    List<Integer[]> vertices;
-    List<Transform> transformation;
-    List<Edge> edges;
-
+    
+    private float red, green, blue;
+    private List<Integer[]> vertices;
+    private List<Transform> transformation;
+    private List<Edge> edges;
+    
     public Polygon() {
         red = 0.0f;
         green = 0.0f;
@@ -39,41 +38,50 @@ public class Polygon {
         green = g;
         blue = b;
     }
-
+    
     public float getRed() {
         return red;
     }
-
+    
     public float getGreen() {
         return green;
     }
-
+    
     public float getBlue() {
         return blue;
     }
-
+    
     public void addVertice(int v1, int v2) {
         Integer[] v = {v1, v2};
         vertices.add(v);
     }
-
-    public Iterator<Integer[]> getVertices() {
-        return vertices.iterator();
+    
+    public List<Integer[]> getVertices() {
+        return vertices;
     }
-
+    
+    public void updateVertice(int index, int x, int y) {
+        Integer[] point = {x, y};
+        vertices.set(index, point);
+    }
+    
     public int getVerticesSize() {
         return vertices.size();
     }
-
+    
+    public void updateVertices(List<Integer[]> update) {
+        vertices = update;
+    }
+    
     public void addEdge(int x1, int y1, int x2, int y2) {
         Edge edge = new Edge(x1, y1, x2, y2);
         edges.add(edge);
     }
-
+    
     public List<Edge> getEdges() {
         return edges;
     }
-
+    
     public int getYMin() {
         int yMin = edges.get(0).getMinY();
         for (Edge edge : edges) {
@@ -83,7 +91,7 @@ public class Polygon {
         }
         return yMin;
     }
-
+    
     public int getYMax() {
         int yMax = edges.get(0).getMaxY();
         for (Edge edge : edges) {
@@ -93,12 +101,13 @@ public class Polygon {
         }
         return yMax;
     }
-
+    
     public void addTransformation(Transform trans) {
         transformation.add(trans);
     }
-
-    public Iterator<Transform> getTransformation() {
-        return transformation.iterator();
+    
+    public List<Transform> getTransformation() {
+//        Collections.sort(transformation);
+        return transformation;
     }
 }

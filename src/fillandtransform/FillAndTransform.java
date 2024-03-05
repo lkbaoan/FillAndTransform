@@ -28,6 +28,11 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class FillAndTransform {
 
+    final int HEIGHT = 480;
+    final int WIDTH = 640;
+    final int CENTER_X = WIDTH / 2;
+    final int CENTER_Y = HEIGHT / 2;
+
     // method: main
     // purpose: to read file and start the program
     public static void main(String[] args) {
@@ -65,6 +70,7 @@ public class FillAndTransform {
                         prevx = x;
                         prevy = y;
                     }
+                    poly.addVertice(Integer.parseInt(splitted[0]), Integer.parseInt(splitted[1]));
 
                 } else if (splitted[0].equals("T")) {
                     poly.addEdge(prevx, prevy, firstX, firstY);
@@ -104,7 +110,7 @@ public class FillAndTransform {
                     Edge e = iv.next();
                     System.out.printf("(%d,%d) (%d,%d)\n", e.getX1(), e.getY1(), e.getX2(), e.getY2());
                 }
-                Iterator<Transform> it = p.getTransformation();
+                Iterator<Transform> it = p.getTransformation().iterator();
                 while (it.hasNext()) {
                     Transform t = it.next();
                     System.out.printf("%c", t.getType());
@@ -118,6 +124,35 @@ public class FillAndTransform {
         }
 
         System.out.println("------------------------------------------------");
+        List<Integer[]> vertices;
+
+        for (int i = 0; i < drawList.size(); i++) {
+            for (Transform trans : drawList.get(i).getTransformation()) {
+                vertices = drawList.get(i).getVertices();
+                switch (trans.type) {
+//                            case 'r' ->
+//                                drawList.get(i).updateVertices(rotation(drawList.get(i).getVertices(), trans.getCoordinate()[0], (int) trans.getCoordinate()[1], (int) trans.getCoordinate()[2]));
+                    case 't' ->
+                        vertices = translate(vertices, (int) trans.getCoordinate()[0], (int) trans.getCoordinate()[1]);
+
+//                                drawList.get(i).updateVertices(translate(drawList.get(i).getVertices(), (int) trans.getCoordinate()[0], (int) trans.getCoordinate()[1]));
+//                            case 's' ->
+//                                drawList.get(i).updateVertices(scale(drawList.get(i).getVertices(), trans.getCoordinate()[0], trans.getCoordinate()[1], (int) trans.getCoordinate()[2], (int) trans.getCoordinate()[3]));
+//                            default ->
+//                                throw new AssertionError();
+                }
+                if (!vertices.isEmpty()) {
+                    for (int a = 0; a < vertices.size(); a++) {
+                        System.out.println(Arrays.toString(vertices.get(a)));
+                    }
+                } else {
+                    System.out.println("No vertices");
+                }
+                drawList.get(i).updateVertices(vertices);
+                System.out.println();
+            }
+        }
+
         // start program with 2D array of command
         program.start(drawList);
 
@@ -132,6 +167,49 @@ public class FillAndTransform {
         }
     }
 
+    /**
+     *
+     * @param vertices
+     * @param tX
+     * @param ty
+     */
+    private static List<Integer[]> translate(List<Integer[]> vertices, int tX, int tY) {
+//        List<Integer[]> translatedVertices = new ArrayList<>();
+        for (int i = 0; i < vertices.size(); i++) {
+//            Integer[] point = vertices.get(i);
+//            point[0] += tX;
+//            point[1] += tY;
+//            translatedVertices.add(point);
+            vertices.get(i)[0] += tX;
+            vertices.get(i)[1] += tY;
+        }
+        return vertices;
+    }
+
+    private List<Integer[]> rotation(List<Integer[]> vertices, double rotationAngle, int pivotX, int pivotY) {
+        List<Integer[]> rotatedVertices = new ArrayList<>();
+        for (int i = 0; i < vertices.size(); i++) {
+            Integer[] point = vertices.get(i);
+            float x = (float) (pivotX + (point[0] - pivotX) * Math.cos(rotationAngle) - (point[1] - pivotY) * Math.sin(rotationAngle));
+            float y = (float) (pivotY + (point[0] - pivotX) * Math.sin(rotationAngle) - (point[1] - pivotY) * Math.cos(rotationAngle));
+            Integer[] newPoint = {(int) x, (int) y};
+            rotatedVertices.add(newPoint);
+        }
+        return rotatedVertices;
+    }
+
+    private List<Integer[]> scale(List<Integer[]> vertices, double scaleX, double scaleY, int pivotX, int pivotY) {
+        List<Integer[]> scaledVertices = new ArrayList<>();
+        for (int i = 0; i < vertices.size(); i++) {
+            Integer[] point = vertices.get(i);
+            float x = (float) (point[0] * scaleX + pivotX * (1 - scaleX));
+            float y = (float) (point[1] * scaleY + pivotY * (1 - scaleY));
+            Integer[] newPoint = {(int) x, (int) y};
+            scaledVertices.add(newPoint);
+        }
+        return scaledVertices;
+    }
+
     private void scanLine(Polygon poly) {
 //        System.out.printf("Size: %d\n", poly.getEdges().size());
         List<Edge> globalEdge = initializeGlobalEdge(poly);
@@ -139,14 +217,14 @@ public class FillAndTransform {
         List<Integer> intersection = new ArrayList<>();
         int yMin = poly.getYMin();
         int yMax = poly.getYMax();
-        System.out.printf("y Min: %d\tyMax: %d\n", yMin, yMax);
+//        System.out.printf("y Min: %d\tyMax: %d\n", yMin, yMax);
 
         glColor3f(poly.getRed(), poly.getGreen(), poly.getBlue());
 
         for (int scanLine = yMin; scanLine <= yMax; scanLine++) {
 //            boolean evenParity = false;
-            activeEdge(activeEdge, globalEdge, scanLine);
-            getIntersection(intersection, activeEdge, scanLine);
+            activeEdge = activeEdge(activeEdge, globalEdge, scanLine);
+            intersection = getIntersection(intersection, activeEdge, scanLine);
             if (scanLine == 160) {
                 System.out.println("AT Y = 160");
                 for (int i = 0; i < activeEdge.size(); i++) {
@@ -157,16 +235,8 @@ public class FillAndTransform {
 //                    double xA = activeEdge.get(i).getAssociateX();
                     System.out.printf("Active: (%d, %d) (%d, %d) \n", x1, y1, x2, y2);
                 }
-                System.out.println("");
-//                System.out.println(intersection);
-//                intersection.remove(0);
+
             }
-//            int first = (int) activeEdge.get(0).getAssociateX();
-//            int last = (int) activeEdge.get(activeEdge.size() - 1).getAssociateX();
-//            for (int i = first; i < last; i++) {
-//                
-//            }
-//            updateActiveEdge(activeEdge);
 
             for (int i = 0; i < intersection.size(); i += 2) {
                 int x1 = intersection.get(i);
@@ -174,33 +244,32 @@ public class FillAndTransform {
                     break;
                 }
                 int x2 = intersection.get(i + 1);
-                for (int j = x1; j <= x2; j++) {
+//                glBegin(GL_LINES);
+//                glVertex2f(x1, scanLine);
+//                glVertex2f(x2, scanLine);
+//                glEnd();
+
+                for (int j = x1; j < x2; j++) {
                     glBegin(GL_POINTS);
-                    glVertex2f(j, scanLine);
+                    glVertex2d(j, scanLine);
                     glEnd();
                 }
             }
         }
     }
 
-    private void getIntersection(List<Integer> intersection, List<Edge> activeEdge, int currentY) {
+    private List<Integer> getIntersection(List<Integer> intersection, List<Edge> activeEdge, int currentY) {
         intersection.clear();
-        List<Edge> temp = new ArrayList<>();
+
         for (Edge e : activeEdge) {
-//            int x = (int) e.getAssociateX();
             int x = (int) (e.getAssociateX() + ((currentY - e.getMinY()) * e.get1OverM()));
             intersection.add(x);
-//            if (currentY == e.getMaxY())
-//            e.updateAssociateX();
-        }
-        if (currentY == 160) {
-            System.out.println(intersection);
         }
         Collections.sort(intersection);
-//        System.out.println(intersection);
+        return intersection;
     }
 
-    private void activeEdge(List<Edge> activeEdges, List<Edge> globalEdge, int y) {
+    private List<Edge> activeEdge(List<Edge> activeEdges, List<Edge> globalEdge, int y) {
         for (Edge e : globalEdge) {
             if (isActive(e, y)) {
                 if (!activeEdges.contains(e)) {
@@ -209,17 +278,8 @@ public class FillAndTransform {
             } else {
                 activeEdges.remove(e);
             }
-//            } else if (activeEdges.contains(e)) {
-//                activeEdges.remove(e);
-//            }
-//            if (e.getMinY() == y) {
-//                activeEdges.add(e);
-//            }
-//            if (e.getMaxY() == y) {
-//                activeEdges.remove(e);
-//            }
         }
-
+        return activeEdges;
     }
 
     private void updateActiveEdge(List<Edge> activeEdge) {
@@ -268,7 +328,7 @@ public class FillAndTransform {
     // purpose: create a new window display with set size and title
     private void createWindow() throws Exception {
         Display.setFullscreen(false);
-        Display.setDisplayMode(new DisplayMode(640, 480));
+        Display.setDisplayMode(new DisplayMode(WIDTH, HEIGHT));
         Display.setTitle("Program 1");
         Display.create();
     }
@@ -280,7 +340,7 @@ public class FillAndTransform {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
 
-        glOrtho(0, 640, 0, 480, 1, -1);
+        glOrtho(-CENTER_X, CENTER_X, -CENTER_Y, CENTER_Y, 1, -1);
 
         glMatrixMode(GL_MODELVIEW);
         glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -289,19 +349,33 @@ public class FillAndTransform {
     // method: render
     // purpose: render graphics based on command
     private void render(List<Polygon> drawList) {
+        glColor3f(1.0f, 1.0f, 0.0f);
+        glPointSize(1);
         // close when press "Q" or click close window
         while (!Keyboard.isKeyDown(Keyboard.KEY_Q) && !Display.isCloseRequested()) {
             try {
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glLoadIdentity();
 
-                glColor3f(1.0f, 1.0f, 0.0f);
-                glPointSize(1);
-
                 // render each command from the array
-//                for (int i = 0; i < drawList.size(); i++) {
-                scanLine(drawList.get(0));
-//                }
+                for (int i = 0; i < drawList.size(); i++) {
+                    glPushMatrix();
+                    Polygon p = drawList.get(i);
+                    for (Transform t : p.getTransformation()) {
+                        switch (t.type) {
+                            case 't' ->
+                                glTranslatef((float) t.getCoordinate()[0], (float) t.getCoordinate()[1], 0);
+                            case 'r' ->
+                                glRotatef((float) t.getCoordinate()[0], (float) t.getCoordinate()[1], (float) t.getCoordinate()[2], 1);
+                            case 's' ->
+                                glScalef((float) t.getCoordinate()[0], (float) t.getCoordinate()[1], 0);
+//                            default -> {
+//                            }
+                        }
+                    }
+                    scanLine(drawList.get(i));
+                    glPopMatrix();
+                }
 
                 Display.update();
                 Display.sync(60);
@@ -310,143 +384,4 @@ public class FillAndTransform {
         }
         Display.destroy();
     }
-//
-//    // method: renderLine
-//    // purpose: render line from start coordinate and end coordiante
-//    private void renderLine(int xStart, int yStart, int xEnd, int yEnd) {
-//        int dx = Math.abs(xEnd - xStart);
-//        int dy = Math.abs(yEnd - yStart);
-//        int x, y, d;
-//        d = 2 * dy - dx;
-//        // swap start and end if end < start so it will always render from left to right
-//        if (xStart > xEnd) {
-//            x = xEnd;
-//            y = yEnd;
-//            xEnd = xStart;
-//        } else {
-//            x = xStart;
-//            y = yStart;
-//        }
-//        int incrementRight = 2 * dy;
-//        int incrementUpRight = 2 * dy - dx;
-//        boolean isUp = yEnd > yStart;
-//
-//        glColor3f(GL_RED, 0, 0);
-//
-//        while (x < xEnd) {
-//            glBegin(GL_POINTS);
-//            glVertex2f(x, y);
-//            glEnd();
-//
-//            x++;
-//            if (d < 0) {
-//                d += incrementRight;
-//            } else {
-//                if (isUp) {
-//                    y++;
-//                } else {
-//                    y--;
-//                }
-//                d += incrementUpRight;
-//            }
-//        }
-//    }
-//
-//    // method: renderCircle
-//    // purpose: render a circle with center coordinate and its radius
-//    private void renderCircle(int xCenter, int yCenter, int radius) {
-//        glColor3f(0, 0, GL_BLUE);
-//
-//        int x = 0;
-//        int y = radius;
-//        int p = 1 - radius;
-//
-//        drawCircle(xCenter, yCenter, x, y);
-//        while (x < y) {
-//            x++;
-//            if (p < 0) {
-//                p += 2 * x + 1;
-//            } else {
-//                y--;
-//                p += 2 * x - 2 * y + 1;
-//            }
-//            drawCircle(xCenter, yCenter, x, y);
-//
-//        }
-//
-//    }
-//
-//    // method: drawCircle
-//    // purpose: actual render command for the circle with its center and edge coordinate
-//    private void drawCircle(int xCenter, int yCenter, int x, int y) {
-//        glBegin(GL_POINTS);
-//        glVertex2f(xCenter + x, yCenter + y);
-//        glVertex2f(xCenter - x, yCenter + y);
-//        glVertex2f(xCenter + x, yCenter - y);
-//        glVertex2f(xCenter - x, yCenter - y);
-//        glVertex2f(xCenter + y, yCenter + x);
-//        glVertex2f(xCenter - y, yCenter + x);
-//        glVertex2f(xCenter + y, yCenter - x);
-//        glVertex2f(xCenter - y, yCenter - x);
-//        glEnd();
-//    }
-//
-//    // method: renderCircle
-//    // purpose: render an ellipse with center coordinate and its radius
-//    private void renderEllipse(int xCenter, int yCenter, int rx, int ry) {
-//        glColor3f(0, GL_GREEN, 0);
-//        int rx2 = rx * rx;
-//        int ry2 = ry * ry;
-//        int twoRx2 = 2 * rx2;
-//        int twoRy2 = 2 * ry2;
-//        int p;
-//        int x = 0;
-//        int y = ry;
-//        int px = 0;
-//        int py = twoRx2 * y;
-//
-//        drawEllipse(xCenter, yCenter, x, y);
-//
-//        // Region 1
-//        p = (int) (ry2 - (rx2 * ry) + (0.25 * rx2));
-//        while (px < py) {
-//            x++;
-//            px += twoRy2;
-//            if (p < 0) {
-//                p += ry2 + px;
-//            } else {
-//                y--;
-//                py -= twoRx2;
-//                p += ry2 + px - py;
-//            }
-//            drawEllipse(xCenter, yCenter, x, y);
-//        }
-//
-//        // Region 2
-//        p = (int) (ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
-//        while (y > 0) {
-//            y--;
-//            py -= twoRx2;
-//            if (p > 0) {
-//                p += rx2 - py;
-//            } else {
-//                x++;
-//                px += twoRy2;
-//                p += rx2 - py + px;
-//            }
-//            drawEllipse(xCenter, yCenter, x, y);
-//        }
-//
-//    }
-//
-//    // method: drawEllipse
-//    // purpose: actual render command for the ellipse with its center and edge coordinate
-//    private void drawEllipse(int xCenter, int yCenter, int x, int y) {
-//        glBegin(GL_POINTS);
-//        glVertex2f(xCenter + x, yCenter + y);
-//        glVertex2f(xCenter - x, yCenter + y);
-//        glVertex2f(xCenter + x, yCenter - y);
-//        glVertex2f(xCenter - x, yCenter - y);
-//        glEnd();
-//    }
 }
