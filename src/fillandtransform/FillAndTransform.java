@@ -113,133 +113,6 @@ public class FillAndTransform {
     }
 
     /**
-     * Method: isNumeric
-     * Purpose: Check if string is a number.
-     *
-     * @param str string to be evaluated.
-     * @return True if it is a number, False otherwise.
-     */
-    private static boolean isNumeric(String str) {
-        try {
-            Double.valueOf(str);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-    /**
-     * Method: scanLine
-     * Purpose: Calculate the coordinate for the polygon using scan line method.
-     *
-     * @param poly Polygon to be calculated.
-     * @return A list of coordinates to be rendered.
-     */
-    private List<Float[]> scanLine(Polygon poly) {
-        List<Float[]> returnCoordinate = new ArrayList<>();
-        List<Edge> globalEdge = initializeGlobalEdge(poly);
-
-        List<Edge> activeEdge = new ArrayList<>();
-        List<Float> intersection = new ArrayList<>();
-
-        float yMin = poly.getYMin();
-        float yMax = poly.getYMax();
-
-        for (float scanLine = yMin; scanLine <= yMax; scanLine++) {
-            activeEdge = activeEdge(activeEdge, globalEdge, scanLine);
-            intersection = getIntersection(intersection, activeEdge, scanLine);
-
-            for (int i = 0; i < intersection.size(); i += 2) {
-                float x1 = intersection.get(i);
-                if (i + 1 >= intersection.size()) {
-                    break;
-                }
-                float x2 = intersection.get(i + 1);
-                for (float j = x1; j < x2; j++) {
-                    Float[] xy = {j, scanLine};
-                    returnCoordinate.add(xy);
-                }
-            }
-        }
-        return returnCoordinate;
-    }
-
-    /**
-     * Method: getIntersection
-     * Purpose: Get a list of value that the scan line cross with the vertices.
-     *
-     * @param intersection list of old intersection.
-     * @param activeEdge list of active edges.
-     * @param currentY current scan line y coordinate.
-     * @return A list of new x coordinates the scan line cross with vertices.
-     */
-    private List<Float> getIntersection(List<Float> intersection, List<Edge> activeEdge, float currentY) {
-        intersection.clear();
-
-        for (Edge e : activeEdge) {
-            float x = (float) (e.getAssociateX() + ((currentY - e.getMinY()) * e.get1OverM()));
-            intersection.add(x);
-        }
-        Collections.sort(intersection);
-        return intersection;
-    }
-
-    /**
-     * Method: activeEdge
-     * Purpose: Get a list of active edge that the scan line currently cross.
-     *
-     * @param activeEdges list of current active edge.
-     * @param globalEdge list of global edge.
-     * @param y scan line coordinate.
-     * @return a new list of active edge.
-     */
-    private List<Edge> activeEdge(List<Edge> activeEdges, List<Edge> globalEdge, float y) {
-        for (Edge e : globalEdge) {
-            if (isActive(e, y)) {
-                if (!activeEdges.contains(e)) {
-                    activeEdges.add(e);
-                }
-            } else {
-                activeEdges.remove(e);
-            }
-        }
-        return activeEdges;
-    }
-
-    /**
-     * Method: isActive
-     * Purpose: Check if the edge is active.
-     *
-     * @param edge to be checked.
-     * @param currentY scan line y coordinate.
-     * @return True if edge is active, False otherwise.
-     */
-    private boolean isActive(Edge edge, float currentY) {
-        return edge.getMinY() < currentY && currentY <= edge.getMaxY();
-    }
-
-    /**
-     * Method: initializeGlobalEdge
-     * Purpose: Initialize the global edge sorted.
-     *
-     * @param poly polygon with that contain all edges.
-     * @return A list of sorted edge.
-     */
-    private List<Edge> initializeGlobalEdge(Polygon poly) {
-        List<Edge> allEdge = poly.getEdges();
-        Collections.sort(allEdge);
-        for (int i = 0; i < allEdge.size(); i++) {
-            try {
-                if (Double.isInfinite(allEdge.get(i).get1OverM())) {
-                    allEdge.remove(i);
-                }
-            } catch (ArithmeticException e) {
-            }
-        }
-        return allEdge;
-    }
-
-    /**
      * Method: Start
      * Purpose: Start a new window and render graphics.
      *
@@ -320,6 +193,133 @@ public class FillAndTransform {
             }
         }
         Display.destroy();
+    }
+
+    /**
+     * Method: scanLine
+     * Purpose: Calculate the coordinate for the polygon using scan line method.
+     *
+     * @param poly Polygon to be calculated.
+     * @return A list of coordinates to be rendered.
+     */
+    private List<Float[]> scanLine(Polygon poly) {
+        List<Float[]> returnCoordinate = new ArrayList<>();
+        List<Edge> globalEdge = initializeGlobalEdge(poly);
+
+        List<Edge> activeEdge = new ArrayList<>();
+        List<Float> intersection = new ArrayList<>();
+
+        float yMin = poly.getYMin();
+        float yMax = poly.getYMax();
+
+        for (float scanLine = yMin; scanLine <= yMax; scanLine++) {
+            activeEdge = activeEdge(activeEdge, globalEdge, scanLine);
+            intersection = getIntersection(intersection, activeEdge, scanLine);
+
+            for (int i = 0; i < intersection.size(); i += 2) {
+                float x1 = intersection.get(i);
+                if (i + 1 >= intersection.size()) {
+                    break;
+                }
+                float x2 = intersection.get(i + 1);
+                for (float j = x1; j < x2; j++) {
+                    Float[] xy = {j, scanLine};
+                    returnCoordinate.add(xy);
+                }
+            }
+        }
+        return returnCoordinate;
+    }
+
+    /**
+     * Method: initializeGlobalEdge
+     * Purpose: Initialize the global edge sorted.
+     *
+     * @param poly polygon with that contain all edges.
+     * @return A list of sorted edge.
+     */
+    private List<Edge> initializeGlobalEdge(Polygon poly) {
+        List<Edge> allEdge = poly.getEdges();
+        Collections.sort(allEdge);
+        for (int i = 0; i < allEdge.size(); i++) {
+            try {
+                if (Double.isInfinite(allEdge.get(i).get1OverM())) {
+                    allEdge.remove(i);
+                }
+            } catch (ArithmeticException e) {
+            }
+        }
+        return allEdge;
+    }
+
+    /**
+     * Method: activeEdge
+     * Purpose: Get a list of active edge that the scan line currently cross.
+     *
+     * @param activeEdges list of current active edge.
+     * @param globalEdge list of global edge.
+     * @param y scan line coordinate.
+     * @return a new list of active edge.
+     */
+    private List<Edge> activeEdge(List<Edge> activeEdges, List<Edge> globalEdge, float y) {
+        for (Edge e : globalEdge) {
+            if (isActive(e, y)) {
+                if (!activeEdges.contains(e)) {
+                    activeEdges.add(e);
+                }
+            } else {
+                activeEdges.remove(e);
+            }
+        }
+        return activeEdges;
+    }
+
+    /**
+     * Method: getIntersection
+     * Purpose: Get a list of value that the scan line cross with the vertices.
+     *
+     * @param intersection list of old intersection.
+     * @param activeEdge list of active edges.
+     * @param currentY current scan line y coordinate.
+     * @return A list of new x coordinates the scan line cross with vertices.
+     */
+    private List<Float> getIntersection(List<Float> intersection, List<Edge> activeEdge, float currentY) {
+        intersection.clear();
+
+        for (Edge e : activeEdge) {
+            float x = (float) (e.getAssociateX() + ((currentY - e.getMinY()) * e.get1OverM()));
+            intersection.add(x);
+        }
+        Collections.sort(intersection);
+        return intersection;
+    }
+
+    /**
+     * Method: isActive
+     * Purpose: Check if the edge is active.
+     *
+     * @param edge to be checked.
+     * @param currentY scan line y coordinate.
+     * @return True if edge is active, False otherwise.
+     */
+    private boolean isActive(Edge edge, float currentY) {
+        return edge.getMinY() < currentY && currentY <= edge.getMaxY();
+    }
+
+    /**
+     * Method: isNumeric
+     * Purpose: Check if string is a number.
+     *
+     * @param str string to be evaluated.
+     * @return True if it is a number, False otherwise.
+     */
+    private static boolean isNumeric(String str) {
+        try {
+            Double.valueOf(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     /**

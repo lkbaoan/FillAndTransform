@@ -19,7 +19,6 @@ import java.util.Stack;
 public class Polygon {
 
     private float red, green, blue;
-    private List<Float[]> vertices;
     private Stack<Transform> transformation;
     private List<Edge> edges;
 
@@ -31,7 +30,6 @@ public class Polygon {
         red = 0.0f;
         green = 0.0f;
         blue = 0.0f;
-        vertices = new ArrayList<>();
         transformation = new Stack<>();
         edges = new ArrayList<>();
     }
