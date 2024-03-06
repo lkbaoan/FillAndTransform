@@ -10,17 +10,15 @@
  * color based on the value from the file.
  *
  *************************************************************** */
-// TODO: Fill comment
 package fillandtransform;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Stack;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
@@ -33,15 +31,19 @@ public class FillAndTransform {
     final int CENTER_X = WIDTH / 2;
     final int CENTER_Y = HEIGHT / 2;
 
-    // method: main
-    // purpose: to read file and start the program
+    /**
+     * Method:main
+     * Purpose: to read file and start the program.
+     *
+     * @param args un-used.
+     */
     public static void main(String[] args) {
         FillAndTransform program = new FillAndTransform();
         List<Polygon> drawList = new ArrayList<>();
 
         // read line from file to arraylist and counting type of command.
         try {
-            // Read file from current project directory
+            // Open file from current project directory
             File file = new File("./src/fillandtransform/coordinates.txt");
             Scanner read = new Scanner(file);
             String str;
@@ -49,33 +51,34 @@ public class FillAndTransform {
             boolean first = true;
             Transform trans;
             boolean firstEdge = true;
-            int firstX = 0, firstY = 0;
-            int prevx = 0, prevy = 0;
+            float firstX = 0, firstY = 0;
+            float prevx = 0, prevy = 0;
+            // Read until end of file
             while (read.hasNextLine()) {
                 str = read.nextLine();
                 String[] splitted = str.trim().split("\\s+");
-                int x, y;
-                System.out.println(Arrays.toString(splitted));
+                float x, y;
+                // Add to edges 
                 if (isNumeric(splitted[0])) {
                     if (firstEdge) {
                         firstEdge = false;
-                        firstX = Integer.parseInt(splitted[0]);
-                        firstY = Integer.parseInt(splitted[1]);
+                        firstX = Float.parseFloat(splitted[0]);
+                        firstY = Float.parseFloat(splitted[1]);
                         prevx = firstX;
                         prevy = firstY;
                     } else {
-                        x = Integer.parseInt(splitted[0]);
-                        y = Integer.parseInt(splitted[1]);
+                        x = Float.parseFloat(splitted[0]);
+                        y = Float.parseFloat(splitted[1]);
                         poly.addEdge(prevx, prevy, x, y);
                         prevx = x;
                         prevy = y;
                     }
-                    poly.addVertice(Integer.parseInt(splitted[0]), Integer.parseInt(splitted[1]));
 
                 } else if (splitted[0].equals("T")) {
                     poly.addEdge(prevx, prevy, firstX, firstY);
                     firstEdge = true;
-                } else if (splitted[0].equals("P")) {
+                } // Set color
+                else if (splitted[0].equals("P")) {
                     if (first) {
                         first = false;
                     } else {
@@ -84,80 +87,38 @@ public class FillAndTransform {
                     poly = new Polygon();
 
                     poly.setColor(Float.parseFloat(splitted[1]), Float.parseFloat(splitted[2]), Float.parseFloat(splitted[3]));
-                } else if (splitted[0].equals("r")) {
-                    trans = new Transform(Double.parseDouble(splitted[1]), Double.parseDouble(splitted[2]), Double.parseDouble(splitted[3]));
+                } // Add to rotate
+                else if (splitted[0].equals("r")) {
+                    trans = new Transform(Float.parseFloat(splitted[1]), Float.parseFloat(splitted[2]), Float.parseFloat(splitted[3]));
                     poly.addTransformation(trans);
-                } else if (splitted[0].equals("s")) {
-                    trans = new Transform(Double.parseDouble(splitted[1]), Double.parseDouble(splitted[2]), Double.parseDouble(splitted[3]), Double.parseDouble(splitted[4]));
+                } // Add to scale
+                else if (splitted[0].equals("s")) {
+                    trans = new Transform(Float.parseFloat(splitted[1]), Float.parseFloat(splitted[2]), Float.parseFloat(splitted[3]), Float.parseFloat(splitted[4]));
                     poly.addTransformation(trans);
-                } else if (splitted[0].equals("t")) {
-                    trans = new Transform(Double.parseDouble(splitted[1]), Double.parseDouble(splitted[2]));
+                } // Add to translate
+                else if (splitted[0].equals("t")) {
+                    trans = new Transform(Float.parseFloat(splitted[1]), Float.parseFloat(splitted[2]));
                     poly.addTransformation(trans);
                 }
 
             }
             drawList.add(poly);
             read.close();
-            System.out.println(drawList.size());
-            Iterator<Polygon> ite = drawList.iterator();
-            int i = 0;
-            while (ite.hasNext()) {
-                Polygon p = ite.next();
-                System.out.printf("Color %f %f %f\n", p.getRed(), p.getGreen(), p.getBlue());
-                Iterator<Edge> iv = p.getEdges().iterator();
-                while (iv.hasNext()) {
-//                    System.out.println(Arrays.toString(iv.next()));
-                    Edge e = iv.next();
-                    System.out.printf("(%d,%d) (%d,%d)\n", e.getX1(), e.getY1(), e.getX2(), e.getY2());
-                }
-                Iterator<Transform> it = p.getTransformation().iterator();
-                while (it.hasNext()) {
-                    Transform t = it.next();
-                    System.out.printf("%c", t.getType());
-                    System.out.println(Arrays.toString(t.getCoordinate()));
-                }
-
-                i++;
-            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
-        System.out.println("------------------------------------------------");
-        List<Integer[]> vertices;
-
-        for (int i = 0; i < drawList.size(); i++) {
-            for (Transform trans : drawList.get(i).getTransformation()) {
-                vertices = drawList.get(i).getVertices();
-                switch (trans.type) {
-//                            case 'r' ->
-//                                drawList.get(i).updateVertices(rotation(drawList.get(i).getVertices(), trans.getCoordinate()[0], (int) trans.getCoordinate()[1], (int) trans.getCoordinate()[2]));
-                    case 't' ->
-                        vertices = translate(vertices, (int) trans.getCoordinate()[0], (int) trans.getCoordinate()[1]);
-
-//                                drawList.get(i).updateVertices(translate(drawList.get(i).getVertices(), (int) trans.getCoordinate()[0], (int) trans.getCoordinate()[1]));
-//                            case 's' ->
-//                                drawList.get(i).updateVertices(scale(drawList.get(i).getVertices(), trans.getCoordinate()[0], trans.getCoordinate()[1], (int) trans.getCoordinate()[2], (int) trans.getCoordinate()[3]));
-//                            default ->
-//                                throw new AssertionError();
-                }
-                if (!vertices.isEmpty()) {
-                    for (int a = 0; a < vertices.size(); a++) {
-                        System.out.println(Arrays.toString(vertices.get(a)));
-                    }
-                } else {
-                    System.out.println("No vertices");
-                }
-                drawList.get(i).updateVertices(vertices);
-                System.out.println();
-            }
-        }
-
-        // start program with 2D array of command
+        // start program with list of command
         program.start(drawList);
 
     }
 
+    /**
+     * Method: isNumeric
+     * Purpose: Check if string is a number.
+     *
+     * @param str string to be evaluated.
+     * @return True if it is a number, False otherwise.
+     */
     private static boolean isNumeric(String str) {
         try {
             Double.valueOf(str);
@@ -168,108 +129,71 @@ public class FillAndTransform {
     }
 
     /**
+     * Method: scanLine
+     * Purpose: Calculate the coordinate for the polygon using scan line method.
      *
-     * @param vertices
-     * @param tX
-     * @param ty
+     * @param poly Polygon to be calculated.
+     * @return A list of coordinates to be rendered.
      */
-    private static List<Integer[]> translate(List<Integer[]> vertices, int tX, int tY) {
-//        List<Integer[]> translatedVertices = new ArrayList<>();
-        for (int i = 0; i < vertices.size(); i++) {
-//            Integer[] point = vertices.get(i);
-//            point[0] += tX;
-//            point[1] += tY;
-//            translatedVertices.add(point);
-            vertices.get(i)[0] += tX;
-            vertices.get(i)[1] += tY;
-        }
-        return vertices;
-    }
-
-    private List<Integer[]> rotation(List<Integer[]> vertices, double rotationAngle, int pivotX, int pivotY) {
-        List<Integer[]> rotatedVertices = new ArrayList<>();
-        for (int i = 0; i < vertices.size(); i++) {
-            Integer[] point = vertices.get(i);
-            float x = (float) (pivotX + (point[0] - pivotX) * Math.cos(rotationAngle) - (point[1] - pivotY) * Math.sin(rotationAngle));
-            float y = (float) (pivotY + (point[0] - pivotX) * Math.sin(rotationAngle) - (point[1] - pivotY) * Math.cos(rotationAngle));
-            Integer[] newPoint = {(int) x, (int) y};
-            rotatedVertices.add(newPoint);
-        }
-        return rotatedVertices;
-    }
-
-    private List<Integer[]> scale(List<Integer[]> vertices, double scaleX, double scaleY, int pivotX, int pivotY) {
-        List<Integer[]> scaledVertices = new ArrayList<>();
-        for (int i = 0; i < vertices.size(); i++) {
-            Integer[] point = vertices.get(i);
-            float x = (float) (point[0] * scaleX + pivotX * (1 - scaleX));
-            float y = (float) (point[1] * scaleY + pivotY * (1 - scaleY));
-            Integer[] newPoint = {(int) x, (int) y};
-            scaledVertices.add(newPoint);
-        }
-        return scaledVertices;
-    }
-
-    private void scanLine(Polygon poly) {
-//        System.out.printf("Size: %d\n", poly.getEdges().size());
+    private List<Float[]> scanLine(Polygon poly) {
+        List<Float[]> returnCoordinate = new ArrayList<>();
         List<Edge> globalEdge = initializeGlobalEdge(poly);
+
         List<Edge> activeEdge = new ArrayList<>();
-        List<Integer> intersection = new ArrayList<>();
-        int yMin = poly.getYMin();
-        int yMax = poly.getYMax();
-//        System.out.printf("y Min: %d\tyMax: %d\n", yMin, yMax);
+        List<Float> intersection = new ArrayList<>();
 
-        glColor3f(poly.getRed(), poly.getGreen(), poly.getBlue());
+        float yMin = poly.getYMin();
+        float yMax = poly.getYMax();
 
-        for (int scanLine = yMin; scanLine <= yMax; scanLine++) {
-//            boolean evenParity = false;
+        for (float scanLine = yMin; scanLine <= yMax; scanLine++) {
             activeEdge = activeEdge(activeEdge, globalEdge, scanLine);
             intersection = getIntersection(intersection, activeEdge, scanLine);
-            if (scanLine == 160) {
-                System.out.println("AT Y = 160");
-                for (int i = 0; i < activeEdge.size(); i++) {
-                    int x1 = activeEdge.get(i).getX1();
-                    int y1 = activeEdge.get(i).getY1();
-                    int x2 = activeEdge.get(i).getX2();
-                    int y2 = activeEdge.get(i).getY2();
-//                    double xA = activeEdge.get(i).getAssociateX();
-                    System.out.printf("Active: (%d, %d) (%d, %d) \n", x1, y1, x2, y2);
-                }
-
-            }
 
             for (int i = 0; i < intersection.size(); i += 2) {
-                int x1 = intersection.get(i);
+                float x1 = intersection.get(i);
                 if (i + 1 >= intersection.size()) {
                     break;
                 }
-                int x2 = intersection.get(i + 1);
-//                glBegin(GL_LINES);
-//                glVertex2f(x1, scanLine);
-//                glVertex2f(x2, scanLine);
-//                glEnd();
-
-                for (int j = x1; j < x2; j++) {
-                    glBegin(GL_POINTS);
-                    glVertex2d(j, scanLine);
-                    glEnd();
+                float x2 = intersection.get(i + 1);
+                for (float j = x1; j < x2; j++) {
+                    Float[] xy = {j, scanLine};
+                    returnCoordinate.add(xy);
                 }
             }
         }
+        return returnCoordinate;
     }
 
-    private List<Integer> getIntersection(List<Integer> intersection, List<Edge> activeEdge, int currentY) {
+    /**
+     * Method: getIntersection
+     * Purpose: Get a list of value that the scan line cross with the vertices.
+     *
+     * @param intersection list of old intersection.
+     * @param activeEdge list of active edges.
+     * @param currentY current scan line y coordinate.
+     * @return A list of new x coordinates the scan line cross with vertices.
+     */
+    private List<Float> getIntersection(List<Float> intersection, List<Edge> activeEdge, float currentY) {
         intersection.clear();
 
         for (Edge e : activeEdge) {
-            int x = (int) (e.getAssociateX() + ((currentY - e.getMinY()) * e.get1OverM()));
+            float x = (float) (e.getAssociateX() + ((currentY - e.getMinY()) * e.get1OverM()));
             intersection.add(x);
         }
         Collections.sort(intersection);
         return intersection;
     }
 
-    private List<Edge> activeEdge(List<Edge> activeEdges, List<Edge> globalEdge, int y) {
+    /**
+     * Method: activeEdge
+     * Purpose: Get a list of active edge that the scan line currently cross.
+     *
+     * @param activeEdges list of current active edge.
+     * @param globalEdge list of global edge.
+     * @param y scan line coordinate.
+     * @return a new list of active edge.
+     */
+    private List<Edge> activeEdge(List<Edge> activeEdges, List<Edge> globalEdge, float y) {
         for (Edge e : globalEdge) {
             if (isActive(e, y)) {
                 if (!activeEdges.contains(e)) {
@@ -282,19 +206,25 @@ public class FillAndTransform {
         return activeEdges;
     }
 
-    private void updateActiveEdge(List<Edge> activeEdge) {
-        for (Edge e : activeEdge) {
-            e.updateAssociateX();
-            System.out.printf("%.1f\t", e.getAssociateX());
-        }
-        System.out.println("");
-        Collections.sort(activeEdge);
-    }
-
-    private boolean isActive(Edge edge, int currentY) {
+    /**
+     * Method: isActive
+     * Purpose: Check if the edge is active.
+     *
+     * @param edge to be checked.
+     * @param currentY scan line y coordinate.
+     * @return True if edge is active, False otherwise.
+     */
+    private boolean isActive(Edge edge, float currentY) {
         return edge.getMinY() < currentY && currentY <= edge.getMaxY();
     }
 
+    /**
+     * Method: initializeGlobalEdge
+     * Purpose: Initialize the global edge sorted.
+     *
+     * @param poly polygon with that contain all edges.
+     * @return A list of sorted edge.
+     */
     private List<Edge> initializeGlobalEdge(Polygon poly) {
         List<Edge> allEdge = poly.getEdges();
         Collections.sort(allEdge);
@@ -303,17 +233,18 @@ public class FillAndTransform {
                 if (Double.isInfinite(allEdge.get(i).get1OverM())) {
                     allEdge.remove(i);
                 }
-//                System.out.printf("%d %d %d %.1f\n", allEdge.get(i).getMinY(), allEdge.get(i).getMaxY(), allEdge.get(i).getAssociateX(), allEdge.get(i).get1OverM());
             } catch (ArithmeticException e) {
             }
         }
-//        System.out.println("---");
-
         return allEdge;
     }
 
-    // method: start
-    // purpose: start a new window and render graphics
+    /**
+     * Method: Start
+     * Purpose: Start a new window and render graphics.
+     *
+     * @param drawList list of polygon to be rendered.
+     */
     public void start(List<Polygon> drawList) {
         try {
             createWindow();
@@ -324,64 +255,106 @@ public class FillAndTransform {
         }
     }
 
-    // method: createWindow
-    // purpose: create a new window display with set size and title
+    /**
+     * Method: createWindow
+     * Purpose: create a new window display with set size
+     * and title.
+     *
+     * @throws Exception if fail to create window.
+     */
     private void createWindow() throws Exception {
         Display.setFullscreen(false);
         Display.setDisplayMode(new DisplayMode(WIDTH, HEIGHT));
-        Display.setTitle("Program 1");
+        Display.setTitle("Program 2");
         Display.create();
     }
 
-    // method: initGL
-    // purpose: initilize openGL task
+    /**
+     * Method: initGL
+     * Purpose: initialize openGL task.
+     */
     private void initGL() {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-
+        // Set center coordinate at the center of the window.
         glOrtho(-CENTER_X, CENTER_X, -CENTER_Y, CENTER_Y, 1, -1);
 
         glMatrixMode(GL_MODELVIEW);
         glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     }
 
-    // method: render
-    // purpose: render graphics based on command
+    /**
+     * Method: render
+     * Purpose: render graphics based on polygon.
+     *
+     * @param drawList list of polygon to be rendered.
+     */
     private void render(List<Polygon> drawList) {
         glColor3f(1.0f, 1.0f, 0.0f);
-        glPointSize(1);
+        glPointSize(2);
+
+        // Calculate coordinate to be rendered.
+        List<List<Float[]>> coordinates = new ArrayList<>();
+        for (int i = 0; i < drawList.size(); i++) {
+            coordinates.add(scanLine(drawList.get(i)));
+        }
         // close when press "Q" or click close window
         while (!Keyboard.isKeyDown(Keyboard.KEY_Q) && !Display.isCloseRequested()) {
             try {
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glLoadIdentity();
 
-                // render each command from the array
-                for (int i = 0; i < drawList.size(); i++) {
+                for (int j = 0; j < coordinates.size(); j++) {
+                    Polygon p = drawList.get(j);
+
                     glPushMatrix();
-                    Polygon p = drawList.get(i);
-                    for (Transform t : p.getTransformation()) {
-                        switch (t.type) {
-                            case 't' ->
-                                glTranslatef((float) t.getCoordinate()[0], (float) t.getCoordinate()[1], 0);
-                            case 'r' ->
-                                glRotatef((float) t.getCoordinate()[0], (float) t.getCoordinate()[1], (float) t.getCoordinate()[2], 1);
-                            case 's' ->
-                                glScalef((float) t.getCoordinate()[0], (float) t.getCoordinate()[1], 0);
-//                            default -> {
-//                            }
-                        }
-                    }
-                    scanLine(drawList.get(i));
+                    glColor3f(p.getRed(), p.getGreen(), p.getBlue());
+                    applyTransformation(p.getTransformation());
+                    drawPoints(coordinates.get(j));
                     glPopMatrix();
                 }
-
                 Display.update();
                 Display.sync(60);
             } catch (Exception e) {
             }
         }
         Display.destroy();
+    }
+
+    /**
+     * Method: drawPoints
+     * Purpose: render the points on screen.
+     *
+     * @param coordinates list of coordinate to be rendered.
+     */
+    private void drawPoints(List<Float[]> coordinates) {
+        glBegin(GL_POINTS);
+        for (int i = 0; i < coordinates.size(); i++) {
+            glVertex2f(coordinates.get(i)[0], coordinates.get(i)[1]);
+        }
+        glEnd();
+    }
+
+    /**
+     * Method: applyTransformation
+     * Purpose: apply transformation to of the
+     * polygon.
+     *
+     * @param transform stack transformation information.
+     */
+    private void applyTransformation(Stack<Transform> transform) {
+        Stack<Transform> stack = (Stack<Transform>) transform.clone();
+        while (!stack.empty()) {
+            Transform trans = stack.pop();
+            switch (trans.type) {
+                case 't' ->
+                    glTranslatef((float) trans.getTransformInfo()[0], (float) trans.getTransformInfo()[1], 0);
+                case 'r' ->
+                    glRotatef((float) trans.getTransformInfo()[0], (float) trans.getTransformInfo()[1], (float) trans.getTransformInfo()[2], 1);
+                case 's' ->
+                    glScalef((float) trans.getTransformInfo()[0], (float) trans.getTransformInfo()[1], 0);
+            }
+        }
     }
 }

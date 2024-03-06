@@ -1,76 +1,87 @@
 /** *************************************************************
- * file: BasicDraw.java
+ * file: Transform.java
  * author: A. Le
  * class: CS 4450 – Computer Graphics
  *
  * assignment: program 2
  * date last modified: 03/06/2024
  *
- * purpose:
+ * purpose: Hold information for the transformation.
  *
  *************************************************************** */
-// TODO: Fill comment
 package fillandtransform;
 
-//public class Transform implements Comparable<Transform> {
 public class Transform {
 
     char type;
-    double[] coordinate;
+    float[] coordinate;
 
-    public Transform(double c1, double c2) {
+    /**
+     * Method: Transform
+     * Purpose: Constructor when its type is translate.
+     *
+     * @param c1 x value to be translated.
+     * @param c2 y value to be translated.
+     */
+    public Transform(float c1, float c2) {
         type = 't';
-        coordinate = new double[2];
+        coordinate = new float[2];
         coordinate[0] = c1;
         coordinate[1] = c2;
     }
 
-    public Transform(double c1, double c2, double c3) {
+    /**
+     * Method: Transform
+     * Purpose: Constructor when its type is rotate.
+     *
+     * @param c1 angle to be rotated.
+     * @param c2 x value of the pivot point.
+     * @param c3 y value of the pivot point.
+     */
+    public Transform(float c1, float c2, float c3) {
         type = 'r';
-        coordinate = new double[3];
+        coordinate = new float[3];
         coordinate[0] = c1;
         coordinate[1] = c2;
         coordinate[2] = c3;
     }
 
-    public Transform(double c1, double c2, double c3, double c4) {
+    /**
+     * Method: Transform
+     * Purpose: Constructor when its type is scale.
+     *
+     * @param c1 scaling factor for x.
+     * @param c2 scaling factor for y.
+     * @param c3 pivot point for x.
+     * @param c4 pivot point for y.
+     */
+    public Transform(float c1, float c2, float c3, float c4) {
         type = 's';
-        coordinate = new double[4];
+        coordinate = new float[4];
         coordinate[0] = c1;
         coordinate[1] = c2;
         coordinate[2] = c3;
         coordinate[3] = c4;
     }
 
+    /**
+     * Method: getType
+     * Purpose: Get the type of the transform.
+     *
+     * @return type of transform.
+     */
     public char getType() {
         return type;
     }
 
-    public double[] getCoordinate() {
+    /**
+     * Method: getTransformInfo
+     * Purpose: Get the transformation information.
+     *
+     * @return array of transformation information
+     */
+    public float[] getTransformInfo() {
         return coordinate;
     }
 
-//    @Override
-//    public int compareTo(Transform t) {
-//        int val = 0;
-//        switch (type) {
-//            case 't':
-//                if (t.type != 't') {
-//                    val = 1;
-//                }
-//                break;
-//            case 'r':
-//                if (t.type == 't') {
-//                    val = -1;
-//                } else if (t.type == 's') {
-//                    val = 1;
-//                }
-//                break;
-//            case 's':
-//                if (t.type != 's') {
-//                    val = -1;
-//                }
-//        }
-//        return val;
-//    }
 }

@@ -1,25 +1,33 @@
 /** *************************************************************
- * file: BasicDraw.java
+ * file: Edge.java
  * author: A. Le
  * class: CS 4450 – Computer Graphics
  *
  * assignment: program 2
  * date last modified: 03/06/2024
  *
- * purpose:
+ * purpose: the file serve as an edge that connect 2 point.
  *
  *************************************************************** */
-// TODO: Fill comment
 package fillandtransform;
 
 public class Edge implements Comparable<Edge> {
 
-    private int x1, y1;
-    private int x2, y2;
-    private int dx, dy;
-    private double associateX;
+    private float x1, y1;
+    private float x2, y2;
+    private float dx, dy;
+    private float associateX;
 
-    public Edge(int x1, int y1, int x2, int y2) {
+    /**
+     * Method: Edge
+     * Purpose: Constructor for Edge.
+     *
+     * @param x1 x coordinate for first point.
+     * @param y1 y coordinate for first point.
+     * @param x2 x coordinate for second point.
+     * @param y2 y coordinate for second point.
+     */
+    public Edge(float x1, float y1, float x2, float y2) {
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
@@ -31,54 +39,123 @@ public class Edge implements Comparable<Edge> {
         associateX = y2 > y1 ? x1 : x2;
     }
 
-    public int getX1() {
+    /**
+     * Method: getX1
+     * Purpose: Getter for x of first point.
+     *
+     * @return float value of x first point.
+     */
+    public float getX1() {
         return x1;
     }
 
-    public int getX2() {
+    /**
+     * Method: getX2
+     * Purpose: Getter for x of second point.
+     *
+     * @return float value of x second point.
+     */
+    public float getX2() {
         return x2;
     }
 
-    public int getY1() {
+    /**
+     * Method: getY1
+     * Purpose: Getter for y of first point.
+     *
+     * @return float value of y first point.
+     */
+    public float getY1() {
         return y1;
     }
 
-    public int getY2() {
+    /**
+     * Method: getY2
+     * Purpose: Getter for y of second point.
+     *
+     * @return float value of y second point.
+     */
+    public float getY2() {
         return y2;
     }
 
-    public int getDX() {
+    /**
+     * Method: getDX
+     * Purpose: Getter for different of x first point and x second point.
+     *
+     * @return float value of dx.
+     */
+    public float getDX() {
         return dx;
     }
 
-    public int getDY() {
+    /**
+     * Method: getDY
+     * Purpose: Getter for different of y first point and y second point.
+     *
+     * @return float value of dy.
+     */
+    public float getDY() {
         return dy;
     }
 
-    public int getMinY() {
+    /**
+     * Method: getMinY
+     * Purpose: Return minimum of two y values of the two points.
+     *
+     * @return float value of minimum y.
+     */
+    public float getMinY() {
         return y2 > y1 ? y1 : y2;
     }
 
-    public int getMaxY() {
+    /**
+     * Method: getMaxY
+     * Purpose: Return maximum of two y value of the two points.
+     *
+     * @return float value of maximum y.
+     */
+    public float getMaxY() {
         return y2 > y1 ? y2 : y1;
     }
 
-    public double getAssociateX() {
+    /**
+     * Method: getAssociateX
+     * Purpose: Return x value associate with the minimum y.
+     *
+     * @return float value of x.
+     */
+    public float getAssociateX() {
         return associateX;
     }
 
-    public void updateAssociateX() {
-        associateX = associateX + get1OverM();
-    }
-
+    /**
+     * Method: getSlope
+     * Purpose: Return the slope of the edge.
+     *
+     * @return double value of the slope.
+     */
     public double getSlope() {
         return ((double) dy / (double) dx);
     }
 
+    /**
+     * Method: get1OverM
+     * Purpose: Return 1/slope of the edge.
+     *
+     * @return double value of the 1/slope.
+     */
     public double get1OverM() {
         return ((double) dx / (double) dy);
     }
 
+    /**
+     * Method: compareTo
+     * Purpose: Compare to two edge together.
+     *
+     * @param e Edge to be compared to.
+     * @return integer. 0: equal, 1: bigger, -1: smaller.
+     */
     @Override
     public int compareTo(Edge e) {
         int val = 0;
