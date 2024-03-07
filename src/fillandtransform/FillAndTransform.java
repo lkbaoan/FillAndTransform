@@ -349,11 +349,14 @@ public class FillAndTransform {
             Transform trans = stack.pop();
             switch (trans.type) {
                 case 't' ->
-                    glTranslatef((float) trans.getTransformInfo()[0], (float) trans.getTransformInfo()[1], 0);
+                    glTranslatef(trans.getTransformInfo()[0], trans.getTransformInfo()[1], 0);
                 case 'r' ->
-                    glRotatef((float) trans.getTransformInfo()[0], (float) trans.getTransformInfo()[1], (float) trans.getTransformInfo()[2], 1);
-                case 's' ->
-                    glScalef((float) trans.getTransformInfo()[0], (float) trans.getTransformInfo()[1], 0);
+                    glRotatef(trans.getTransformInfo()[0], trans.getTransformInfo()[1], trans.getTransformInfo()[2], 1);
+                case 's' -> {
+                    glTranslatef(trans.getTransformInfo()[2], trans.getTransformInfo()[3], 0);
+                    glScalef(trans.getTransformInfo()[0], trans.getTransformInfo()[1], 0);
+                    glTranslatef(-trans.getTransformInfo()[2], -trans.getTransformInfo()[3], 0);
+                }
             }
         }
     }
